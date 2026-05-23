@@ -2432,23 +2432,34 @@ width: 100px;
 }
 
         function removerSabor(produtoIndex, saborIndex) {
-            carrinho[produtoIndex].sabores.splice(saborIndex, 1);
 
-            if (carrinho[produtoIndex].sabores.length === 0) {
-                carrinho.splice(produtoIndex, 1);
-            }
+    let produto = carrinho[produtoIndex];
 
-            salvarCarrinho();
-            atualizarCarrinho();
-            atualizarContadorCarrinho();
-        }
+    // remove tamanho
+    produto.sabores.splice(saborIndex, 1);
 
-        function removerDoCarrinho(index) {
-            carrinho.splice(index, 1);
-            salvarCarrinho();
-            atualizarCarrinho();
-            atualizarContadorCarrinho();
-        }
+    // se não sobrou nenhum tamanho remove produto
+    if (produto.sabores.length === 0) {
+
+        carrinho.splice(produtoIndex, 1);
+
+    } else {
+
+        // 🔥 recalcula quantidade total
+        let quantidadeTotal = produto.sabores.reduce(
+            (t, s) => t + s.quantidade,
+            0
+        );
+
+        // 🔥 recalcula preço
+        produto.precoTotal =
+            quantidadeTotal * produto.precoUnitario;
+    }
+
+    salvarCarrinho();
+    atualizarCarrinho();
+    atualizarContadorCarrinho();
+}
 
         /* =======================
         ATUALIZAR CONTADOR CARRINHO
