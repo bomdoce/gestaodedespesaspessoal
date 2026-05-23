@@ -2276,11 +2276,12 @@ width: 100px;
     } else {
 
         carrinho.push({
-            produto,
-            sabores: saboresNovos,
-            precoTotal: precoTotal,
-            imagemProduto
-        });
+    produto,
+    sabores: saboresNovos,
+    precoTotal: precoTotal,
+    precoUnitario: precoProduto,
+    imagemProduto
+});
     }
 
     salvarCarrinho();
@@ -2397,23 +2398,26 @@ width: 100px;
         AJUSTAR / REMOVER ITENS
         ======================= */
         function ajustarQuantidadeSabor(produtoIndex, saborIndex, delta) {
-            let produto = carrinho[produtoIndex];
-            let sabor = produto.sabores[saborIndex];
 
-            let atual = produto.sabores.reduce((t, s) => t + s.quantidade, 0);
-            let maxMatch = produto.produto.match(/\d+/);
-            let max = maxMatch ? parseInt(maxMatch[0]) : 0;
+    let produto = carrinho[produtoIndex];
+    let sabor = produto.sabores[saborIndex];
 
-            if (delta < 0 && sabor.quantidade === 1) return;
+    if (delta < 0 && sabor.quantidade === 1) return;
 
-            sabor.quantidade += delta;
-            sabor.precoTotal = sabor.quantidade * sabor.preco;
+    sabor.quantidade += delta;
 
-            produto.precoTotal = produto.sabores.reduce((t, s) => t + s.precoTotal, 0);
+    // quantidade total do produto
+    let quantidadeTotal = produto.sabores.reduce(
+        (t, s) => t + s.quantidade,
+        0
+    );
 
-            salvarCarrinho();
-            atualizarCarrinho();
-        }
+    // 🔥 calcula pelo preço do produto
+    produto.precoTotal = quantidadeTotal * produto.precoUnitario;
+
+    salvarCarrinho();
+    atualizarCarrinho();
+}
 
         function removerSabor(produtoIndex, saborIndex) {
             carrinho[produtoIndex].sabores.splice(saborIndex, 1);
