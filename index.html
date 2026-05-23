@@ -1843,29 +1843,29 @@ width: 100px;
 
         <div id="sabores">
             <label>
-                <input type="checkbox" value="Tamanho P" data-preco="2.00">
-                P
-            </label>
+    <input type="checkbox" value="Tamanho P">
+    P
+</label>
 
-            <label>
-                <input type="checkbox" value="Tamanho M" data-preco="1.70">
-                M
-            </label>
+<label>
+    <input type="checkbox" value="Tamanho M">
+    M
+</label>
 
-            <label>
-                <input type="checkbox" value="Tamanho G" data-preco="1.70">
-                G
-            </label>
+<label>
+    <input type="checkbox" value="Tamanho G">
+    G
+</label>
 
-            <label>
-                <input type="checkbox" value="Tamanho GG" data-preco="1.70">
-                GG
-            </label>
+<label>
+    <input type="checkbox" value="Tamanho GG">
+    GG
+</label>
 
-            <label>
-                <input type="checkbox" value="Tamanho XGG" data-preco="2.00">
-                XGG
-            </label>
+<label>
+    <input type="checkbox" value="Tamanho XGG">
+    XGG
+</label>
 
         </div>
 
@@ -2210,65 +2210,101 @@ width: 100px;
         ADICIONAR AO CARRINHO
         ======================= */
         function adicionarAoCarrinho() {
-            let produto = document.getElementById('produtoNome').innerText;
-            let saboresSelecionados = document.querySelectorAll('#sabores input:checked');
-            let saboresNovos = [];
-            let precoTotalNovos = 0;
-            let imagemProduto = document.getElementById('produtoImagem').src;
 
-            if (saboresSelecionados.length === 0) {
-                alert("Escolha pelo menos um sabor.");
-                return;
+    let produto = document.getElementById('produtoNome').innerText;
+    let saboresSelecionados = document.querySelectorAll('#sabores input:checked');
+    let saboresNovos = [];
+    let imagemProduto = document.getElementById('produtoImagem').src;
+
+    if (saboresSelecionados.length === 0) {
+        alert("Escolha pelo menos um tamanho.");
+        return;
+    }
+
+    // 🔥 PEGA O CARD DO PRODUTO
+    const card = Array.from(document.querySelectorAll(".card")).find(c =>
+        c.getAttribute("onclick").includes(produto)
+    );
+
+    let precoProduto = 0;
+
+    if (card) {
+
+        const precoTexto = card.querySelector(".preco").innerText;
+
+        precoProduto = parseFloat(
+            precoTexto
+                .replace("Preço", "")
+                .replace("R$", "")
+                .replace(",", ".")
+                .trim()
+        );
+    }
+
+    saboresSelecionados.forEach(sabor => {
+
+        let quantidade = 1;
+
+        // mantém quantidade ao editar
+        if (produtoEditandoIndex !== null) {
+
+            const saborAntigo = carrinho[produtoEditandoIndex]
+                .sabores
+                .find(s => s.nome === sabor.value);
+
+            if (saborAntigo) {
+                quantidade = saborAntigo.quantidade;
             }
-
-            saboresSelecionados.forEach(sabor => {
-                let preco = parseFloat(sabor.dataset.preco);
-
-                // 🔥 Se estiver editando, tenta reaproveitar a quantidade antiga
-                let quantidade = 1;
-                if (produtoEditandoIndex !== null) {
-                    const saborAntigo = carrinho[produtoEditandoIndex].sabores.find(s => s.nome === sabor.value);
-                    if (saborAntigo) {
-                        quantidade = saborAntigo.quantidade; // MANTÉM A QTD
-                    }
-                }
-
-                saboresNovos.push({
-                    nome: sabor.value,
-                    preco,
-                    quantidade: quantidade,
-                    precoTotal: preco * quantidade,
-                    especial: sabor.dataset.especial === "true"
-                });
-
-                precoTotalNovos += preco * quantidade;
-                sabor.checked = false;
-            });
-
-            if (produtoEditandoIndex !== null) {
-                carrinho[produtoEditandoIndex].sabores = saboresNovos;
-                carrinho[produtoEditandoIndex].precoTotal = precoTotalNovos;
-                produtoEditandoIndex = null;
-            } else {
-                carrinho.push({
-                    produto,
-                    sabores: saboresNovos,
-                    precoTotal: precoTotalNovos,
-                    imagemProduto
-                });
-            }
-
-            salvarCarrinho();
-            atualizarCarrinho();
-            atualizarContadorCarrinho();
-
-            document.getElementById('produtoSelecionado').classList.add('hidden');
-            document.getElementById('carrinho').classList.remove('hidden');
-
-            esconderHeaderCheckout();
-            esconderFooter();
         }
 
+        saboresNovos.push({
+            nome: sabor.value,
+            quantidade: quantidade
+        });
+
+        sabor.checked = false;
+    });
+
+    // 🔥 QUANTIDADE TOTAL
+    const quantidadeTotal = saboresNovos.reduce(
+        (t, s) => t + s.quantidade,
+        0
+    );
+
+    // 🔥 TOTAL PELO PRODUTO
+    const precoTotal = precoProduto * quantidadeTotal;
+
+    if (produtoEditandoIndex !== null) {
+
+        carrinho[produtoEditandoIndex].sabores = saboresNovos;
+
+        carrinho[produtoEditandoIndex].precoUnitario = precoProduto;
+
+        carrinho[produtoEditandoIndex].precoTotal = precoTotal;
+
+        produtoEditandoIndex = null;
+
+    } else {
+
+        carrinho.push({
+            produto,
+            sabores: saboresNovos,
+            precoUnitario: precoProduto,
+            precoTotal: precoTotal,
+            imagemProduto
+        });
+    }
+
+    salvarCarrinho();
+    atualizarCarrinho();
+    atualizarContadorCarrinho();
+
+    document.getElementById('produtoSelecionado').classList.add('hidden');
+    document.getElementById('carrinho').classList.remove('hidden');
+
+    esconderHeaderCheckout();
+    esconderFooter();
+}
 
 
         /* =======================
@@ -2372,23 +2408,28 @@ width: 100px;
         AJUSTAR / REMOVER ITENS
         ======================= */
         function ajustarQuantidadeSabor(produtoIndex, saborIndex, delta) {
-            let produto = carrinho[produtoIndex];
-            let sabor = produto.sabores[saborIndex];
 
-            let atual = produto.sabores.reduce((t, s) => t + s.quantidade, 0);
-            let maxMatch = produto.produto.match(/\d+/);
-            let max = maxMatch ? parseInt(maxMatch[0]) : 0;
+    let produto = carrinho[produtoIndex];
+    let sabor = produto.sabores[saborIndex];
 
-            if (delta < 0 && sabor.quantidade === 1) return;
+    // impede ficar menor que 1
+    if (delta < 0 && sabor.quantidade === 1) return;
 
-            sabor.quantidade += delta;
-            sabor.precoTotal = sabor.quantidade * sabor.preco;
+    // altera quantidade
+    sabor.quantidade += delta;
 
-            produto.precoTotal = produto.sabores.reduce((t, s) => t + s.precoTotal, 0);
+    // quantidade total do produto
+    let quantidadeTotal = produto.sabores.reduce(
+        (t, s) => t + s.quantidade,
+        0
+    );
 
-            salvarCarrinho();
-            atualizarCarrinho();
-        }
+    // 🔥 recalcula total
+    produto.precoTotal = quantidadeTotal * produto.precoUnitario;
+
+    salvarCarrinho();
+    atualizarCarrinho();
+}
 
         function removerSabor(produtoIndex, saborIndex) {
             carrinho[produtoIndex].sabores.splice(saborIndex, 1);
