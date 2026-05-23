@@ -2477,6 +2477,26 @@ function adicionarAoCarrinho() {
     atualizarContadorCarrinho();
 }
 
+
+
+function removerDoCarrinho(index) {
+
+    // remove produto inteiro
+    carrinho.splice(index, 1);
+
+    salvarCarrinho();
+    atualizarCarrinho();
+    atualizarContadorCarrinho();
+
+    // volta pra home se carrinho vazio
+    if (carrinho.length === 0) {
+        voltarHome();
+    }
+}
+
+
+
+
         /* =======================
         ATUALIZAR CONTADOR CARRINHO
         ======================= */
